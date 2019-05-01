@@ -1,0 +1,7 @@
+D:\Oppa\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.exe.config
+D:\Oppa\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.exe
+D:\Oppa\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.pdb
+D:\Oppa\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csprojAssemblyReference.cache
+D:\Oppa\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csproj.CoreCompileInputs.cache
+D:\Oppa\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.exe
+D:\Oppa\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.pdb
