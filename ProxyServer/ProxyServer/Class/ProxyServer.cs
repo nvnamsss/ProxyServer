@@ -14,24 +14,29 @@ namespace ProxyServer.Class
         private string BlacklistPath { get; set; }
         public Socket SocketListener { get; set; }
         public Socket SocketSender { get; set;}
-        public Socket Handler { get; set; }
+        public List<BridgeConnection> Connections { get; set; }
         public IPAddress IPAddress { get; set; }
         public IPEndPoint IPEndPoint { get; set; }
         public List<string> BlackList { get; set; }
+        public System.Timers.Timer Timer = new System.Timers.Timer();
 
         public Proxy()
         {
             string address = Utils.GetAddress(ConstantProperty.PROXY_HOST, ConstantProperty.PROXY_PORT);
             //IPAddress = IPAddress.Parse(ConstantProperty.PROXY_HOST);
             //IPEndPoint = new IPEndPoint(IPAddress, ConstantProperty.PROXY_PORT);
+           
             SocketListener = new Socket(SocketType.Stream, ProtocolType.Tcp);
             SocketSender = new Socket(SocketType.Stream, ProtocolType.Tcp);
             IPAddress = IPAddress.Parse("127.0.0.1");
             IPEndPoint = new IPEndPoint(IPAddress, ConstantProperty.PROXY_PORT);
+            Connections = new List<BridgeConnection>(10);
             BlackList = new List<string>();
+
+            Run();
         }
 
-        public void Start()
+        public void Listen()
         {
             string data = null;
             byte[] bytes;
@@ -40,24 +45,19 @@ namespace ProxyServer.Class
                 SocketListener.Bind(IPEndPoint);
                 SocketListener.Listen(ConstantProperty.BACKLOG);
 
-                Handler = SocketListener.Accept();
-                Console.WriteLine("A browser connect to Server");   
-                while (true)
+                Listen:
+               
+                Socket handler = SocketListener.Accept();
+                Console.WriteLine("New Connection");
+                lock (Connections)
                 {
-                    bytes = new byte[1024];
-                    int bytesRec = Handler.Receive(bytes);
-                    data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-
-                    Console.WriteLine(Encoding.ASCII.GetString(bytes, 0, bytesRec));
-                    //if (data.IndexOf("<EOF>") > -1)
-                    //{
-                    //    break;
-                    //}
+                    Connections.Add(new BridgeConnection(handler));
+                    Connections[Connections.Count - 1].Name = Connections.Count.ToString();
                 }
                 
-                
+                //Connections[0].SocketClient = handler;
+                goto Listen;
 
-                byte[] msg = Encoding.ASCII.GetBytes(data);
             }
             catch (Exception e)
             {
@@ -68,67 +68,16 @@ namespace ProxyServer.Class
 
         public void Connect(string host, int port)
         {
-            IPHostEntry ipHostInfo = Dns.GetHostEntry("localhost");
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 11000);
-            //SocketSender.Connect(host, port);
-            Uri uri = new Uri("https://www.google.com.vn/");
-            Console.WriteLine("Host {0} Port {1}", uri.Host, uri.Port);
-            SocketSender.Connect(uri.Host, 80);
-            
+            SocketSender.Connect(host, port);
             Console.Write(SocketSender.Connected);
         }
 
-        public string SendRequest(string message)
+        public void DisconnectAll()
         {
-            string data = null;
-            byte[] bytes = Encoding.UTF8.GetBytes(message);
-            SocketSender.Send(bytes);
-
-            while (true)
-            {
-                bytes = new byte[1024];
-                int bytesRec = SocketSender.Receive(bytes);
-                data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                //
-                if (bytesRec > 0)
-                {
-                    Console.WriteLine(bytesRec);
-                    Console.WriteLine(Encoding.ASCII.GetString(bytes, 0, bytesRec));
-                }
-                
-                //Handler.Send(bytes);
-                //if (bytesRec <= 0)
-                //{
-                //    break;
-                //}
-
-                
-            }
-
-            Console.WriteLine("Text received : {0}", data);
-
-            return data;
-        }
-
-        public void Read()
-        {
-            string data = null;
-            byte[] bytes;
-            while (true)
+            for (int loop = 0; loop < Connections.Count; loop++)
             {
 
             }
-        }
-
-        public void Get(string url)
-        {
-            string request = "GET /meo HTTP/1.1\r\nHost: localhost\r\n\r\n";
-            SendRequest(request);
-        }
-
-        public void Disconnect()
-        {
             if (SocketSender.Connected)
             {
                 SocketSender.Disconnect(true);
@@ -140,9 +89,15 @@ namespace ProxyServer.Class
 
         }
 
-        private bool CheckBlackList()
+        public bool CheckBlackList(string host)
         {
             bool isBanned = false;
+            //Console.WriteLine("Checking black list for {0}", host);
+
+            if (host != "www.google.com")
+            {
+                isBanned = true;
+            }
 
             return isBanned;
         }
@@ -163,6 +118,55 @@ namespace ProxyServer.Class
             }
 
             stream.Close();
+        }
+
+        public void Close()
+        {
+            SocketListener.Close();
+            SocketSender.Close();
+            for (int loop = 0; loop < Connections.Count; loop++)
+            {
+                Connections[loop].SocketClient.Close();
+                Connections[loop].SocketServer.Close();
+            }
+        }
+
+        public void Run()
+        {
+            Timer.Interval = 200;
+            Timer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
+            {
+                lock (Connections)
+                {
+                    int length = Connections.Count;
+                    for (int loop = 0; loop < length; loop++)
+                    {
+                        if (!Connections[loop].SocketClient.Connected)
+                        {
+                            Connections[loop].Timeout += 200;
+                        }
+
+                        if (Connections[loop].Timeout > 10000)
+                        {
+                            Connections.RemoveAt(loop);
+                            loop = loop - 1;
+                            continue;
+                        }
+
+                        string message = Connections[loop].ReceiveClient();
+                        if (message.Contains("CONNECT"))
+                        {
+                            Connections[loop].Timeout = 0;
+                            string response = "HTTP/1.1 200 OK\r\n";
+                            Console.WriteLine("Response");
+                            Connections[loop].SendClient(response);
+                        }
+                    }
+                }
+               
+            };
+
+            Timer.Start();
         }
     }
 

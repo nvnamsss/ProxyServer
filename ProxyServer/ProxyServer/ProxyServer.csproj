@@ -43,7 +43,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Class\BridgeConnection.cs" />
     <Compile Include="Class\ConstantProperty.cs" />
+    <Compile Include="Class\Event.cs" />
+    <Compile Include="Class\HttpMessage.cs" />
     <Compile Include="Class\ProxyServer.cs" />
     <Compile Include="Class\Utils.cs" />
     <Compile Include="Program.cs" />

@@ -10,8 +10,12 @@ namespace ProxyServer.Class
     {
         public static string PROXY_HOST { get; } = "localhost";
         public static string WEBSERVER_HOST { get; } = "localhost";
+        public static string CLRF { get; } = "\r\n";
         public static int PROXY_PORT { get; } = 8888;
         public static int WEBSERVER_PORT { get; } = 8080;
         public static int BACKLOG { get; } = 20;
+
+        public static int BUFFER_SIZE { get; } = 1024;
+
     }
 }
