@@ -12,3 +12,10 @@ D:\All Project\Git\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.c
 D:\All Project\Git\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csproj.CoreCompileInputs.cache
 D:\All Project\Git\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.exe
 D:\All Project\Git\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.pdb
+D:\Git\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.exe.config
+D:\Git\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.exe
+D:\Git\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.pdb
+D:\Git\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csprojAssemblyReference.cache
+D:\Git\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csproj.CoreCompileInputs.cache
+D:\Git\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.exe
+D:\Git\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.pdb

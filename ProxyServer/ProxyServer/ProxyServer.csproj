@@ -43,12 +43,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncSocket\AsyncClient.cs" />
+    <Compile Include="AsyncSocket\AsyncSocketListener.cs" />
     <Compile Include="Class\BridgeConnection.cs" />
     <Compile Include="Class\ConstantProperty.cs" />
     <Compile Include="Class\Event.cs" />
     <Compile Include="Class\HttpMessage.cs" />
     <Compile Include="Class\ProxyServer.cs" />
     <Compile Include="Class\Utils.cs" />
+    <Compile Include="Class\Server\WebClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -56,6 +59,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Class\Client\" />
     <Folder Include="Enum\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProxyServer.Class
@@ -19,6 +20,9 @@ namespace ProxyServer.Class
         public IPEndPoint IPEndPoint { get; set; }
         public List<string> BlackList { get; set; }
         public System.Timers.Timer Timer = new System.Timers.Timer();
+
+        private ManualResetEvent Stopping { get; set; }
+        private Thread ListenThread { get; set; }
 
         public Proxy()
         {
@@ -36,28 +40,30 @@ namespace ProxyServer.Class
             Run();
         }
 
-        public void Listen()
+        public void StartListen()
         {
-            string data = null;
-            byte[] bytes;
+            SocketListener.Bind(IPEndPoint);
+            SocketListener.Listen(ConstantProperty.BACKLOG);
+            Stopping = new ManualResetEvent(false);
+            ListenThread = new Thread(new ThreadStart(AcceptConnection));
+            ListenThread.Start();
+        }
+
+        public void AcceptConnection()
+        {
             try
             {
-                SocketListener.Bind(IPEndPoint);
-                SocketListener.Listen(ConstantProperty.BACKLOG);
-
-                Listen:
-               
-                Socket handler = SocketListener.Accept();
-                Console.WriteLine("New Connection");
-                lock (Connections)
+                while (!Stopping.WaitOne(0))
                 {
-                    Connections.Add(new BridgeConnection(handler));
-                    Connections[Connections.Count - 1].Name = Connections.Count.ToString();
+                    Socket handler = SocketListener.Accept();
+                    Console.WriteLine("New Connection");
+                    lock (Connections)
+                    {
+                        Connections.Add(new BridgeConnection(handler));
+                        Connections[Connections.Count - 1].Name = Connections.Count.ToString();
+                    }
                 }
                 
-                //Connections[0].SocketClient = handler;
-                goto Listen;
-
             }
             catch (Exception e)
             {
@@ -131,42 +137,18 @@ namespace ProxyServer.Class
             }
         }
 
-        public void Run()
+        public async void Run()
         {
-            Timer.Interval = 200;
-            Timer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
-            {
-                lock (Connections)
-                {
-                    int length = Connections.Count;
-                    for (int loop = 0; loop < length; loop++)
-                    {
-                        if (!Connections[loop].SocketClient.Connected)
-                        {
-                            Connections[loop].Timeout += 200;
-                        }
-
-                        if (Connections[loop].Timeout > 10000)
-                        {
-                            Connections.RemoveAt(loop);
-                            loop = loop - 1;
-                            continue;
-                        }
-
-                        string message = Connections[loop].ReceiveClient();
-                        if (message.Contains("CONNECT"))
-                        {
-                            Connections[loop].Timeout = 0;
-                            string response = "HTTP/1.1 200 OK\r\n";
-                            Console.WriteLine("Response");
-                            Connections[loop].SendClient(response);
-                        }
-                    }
-                }
-               
-            };
-
-            Timer.Start();
+            //while (true)
+            //{
+            //    foreach (BridgeConnection connection in Connections)
+            //    {
+            //        connection.ReceiveClient();
+            //        connection.ReceiveServer();
+            //    }
+            //    await Utils.Delay(100);
+            //}
+            
         }
     }
 
