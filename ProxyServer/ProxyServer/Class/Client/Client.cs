@@ -11,11 +11,25 @@ namespace ProxyServer.Class
 {
     public class Client
     {
+        public BridgeConnection Parent { get; set; }
         public Socket Socket { get; set; }
-        private ManualResetEvent ConnectDone =new ManualResetEvent(false);
+        private ManualResetEvent ConnectDone = new ManualResetEvent(false);
         private ManualResetEvent SendDone = new ManualResetEvent(false);
         private ManualResetEvent ReceiveDone = new ManualResetEvent(false);
         private string Response = string.Empty;
+
+
+        public Client (BridgeConnection parent)
+        {
+            Parent = parent;
+            Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+        }
+
+        public Client(BridgeConnection parent, Socket socket)
+        {
+            Parent = parent;
+            Socket = socket;
+        }
 
         public void Receive()
         {
@@ -28,6 +42,8 @@ namespace ProxyServer.Class
                 // Begin receiving the data from the remote device.  
                 Socket.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                     new AsyncCallback(ReceiveCallback), state);
+                Console.WriteLine("Yes, indeed");
+
             }
             catch (Exception e)
             {
@@ -40,14 +56,14 @@ namespace ProxyServer.Class
             try
             {
                 // Retrieve the state object and the client socket   
-                // from the asynchronous state object.  
+                // from the asynchronous state object. 
+
                 StateObject state = (StateObject)ar.AsyncState;
                 Socket client = state.workSocket;
 
                 // Read data from the remote device.  
                 int bytesRead = client.EndReceive(ar);
-
-                if (bytesRead > 0)
+                if (bytesRead == StateObject.BufferSize)
                 {
                     // There might be more data, so store the data received so far.  
                     state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
@@ -58,11 +74,20 @@ namespace ProxyServer.Class
                 }
                 else
                 {
+                    state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+
+                    Console.WriteLine("hi mom");
+
                     // All the data has arrived; put it in response.  
+
                     if (state.sb.Length > 1)
                     {
                         Response = state.sb.ToString();
+                        Console.WriteLine("Response: " + Response);
+                        Parent.ProcessClientMessage(Response);
+
                     }
+                    //Console.WriteLine("Received data from Browser: \r\n", Response);
                     // Signal that all bytes have been received.  
                     ReceiveDone.Set();
                 }
@@ -92,7 +117,7 @@ namespace ProxyServer.Class
 
                 // Complete sending the data to the remote device.  
                 int bytesSent = client.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to server.", bytesSent);
+                Console.WriteLine("Sent {0} bytes to browser.", bytesSent);
 
                 // Signal that all bytes have been sent.  
                 SendDone.Set();
@@ -101,6 +126,18 @@ namespace ProxyServer.Class
             {
                 Console.WriteLine(e.ToString());
             }
+        }
+
+        public void Close()
+        {
+            SendDone.Set();
+            ConnectDone.Set();
+            ReceiveDone.Set();
+            Socket.Shutdown(SocketShutdown.Both);
+            Socket.Close();
+            ConnectDone.Close();
+            ReceiveDone.Close();
+            SendDone.Close();
         }
     }
 }

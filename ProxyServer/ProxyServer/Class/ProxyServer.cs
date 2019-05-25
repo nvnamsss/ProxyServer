@@ -56,14 +56,15 @@ namespace ProxyServer.Class
                 while (!Stopping.WaitOne(0))
                 {
                     Socket handler = SocketListener.Accept();
+                  
                     Console.WriteLine("New Connection");
                     lock (Connections)
                     {
                         Connections.Add(new BridgeConnection(handler));
                         Connections[Connections.Count - 1].Name = Connections.Count.ToString();
+                        Connections[Connections.Count - 1].Parent = this;
                     }
                 }
-                
             }
             catch (Exception e)
             {
@@ -76,6 +77,18 @@ namespace ProxyServer.Class
         {
             SocketSender.Connect(host, port);
             Console.Write(SocketSender.Connected);
+        }
+
+        public void Remove(string name)
+        {
+            Console.WriteLine("Remove");
+            for (int loop = 0; loop < Connections.Count; loop++)
+            {
+                if (Connections[loop].Name.Equals(name))
+                {
+                    Connections.RemoveAt(loop);
+                }
+            }
         }
 
         public void DisconnectAll()
@@ -130,11 +143,7 @@ namespace ProxyServer.Class
         {
             SocketListener.Close();
             SocketSender.Close();
-            for (int loop = 0; loop < Connections.Count; loop++)
-            {
-                Connections[loop].SocketClient.Close();
-                Connections[loop].SocketServer.Close();
-            }
+
         }
 
         public async void Run()

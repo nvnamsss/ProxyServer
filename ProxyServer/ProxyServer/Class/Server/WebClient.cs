@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -12,6 +13,7 @@ namespace ProxyServer.Class
 {
     public class SWebClient
     {
+        public BridgeConnection Parent { get; set; }
         public static int CAPACITY { get; } = 5242880;
         public static ManualResetEvent allDone = new ManualResetEvent(false);
         public Dictionary<string, string> Headers { get; set; }
@@ -19,16 +21,17 @@ namespace ProxyServer.Class
         private HttpMessage Message { get; set; }
         private byte[] Bytes { get; set; }
         private Uri Address { get; set; }
-        private NetworkStream Stream;
+        private NetworkStream Stream = null;
 
-        public SWebClient()
+        public SWebClient(BridgeConnection parent)
         {
             Headers = new Dictionary<string, string>();
             Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             Bytes = new byte[CAPACITY];
+            Parent = parent;
         }
 
-        public SWebClient(string address)
+        public SWebClient(BridgeConnection parent, string address)
         {
             Headers = new Dictionary<string, string>();
             Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
@@ -36,7 +39,7 @@ namespace ProxyServer.Class
             Address = new Uri(address);
             Socket.Connect(Address.Host, Address.Port);
             Stream = new NetworkStream(Socket);
-            //Socket.Connect(uri.)
+            Parent = parent;
         }
 
         public void Connect(string host, int port)
@@ -93,6 +96,13 @@ namespace ProxyServer.Class
                     handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                     new AsyncCallback(ReadCallback), state);
                 }
+                Console.WriteLine(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+
+            }
+            else
+            {
+                    Parent.ProcessServerMessage(content);
+
             }
         }
 
@@ -123,15 +133,24 @@ namespace ProxyServer.Class
 
                 // Complete sending the data to the remote device.  
                 int bytesSent = handler.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to client.", bytesSent);
+                Console.WriteLine("Sent {0} bytes to WebServer.", bytesSent);
 
-                handler.Shutdown(SocketShutdown.Both);
-                handler.Close();
-
+                Read();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
+            }
+        }
+
+        public void Close()
+        {
+            //Socket.Shutdown(SocketShutdown.Both);
+            Socket.Close();
+            allDone.Close();
+            if (Stream != null)
+            {
+                Stream.Close();
             }
         }
     }

@@ -16,17 +16,19 @@ namespace ProxyServer
         static void Main(string[] args)
         {
             Proxy proxy = new Proxy();
+            //proxy.StartListen();
+
             //string request = "CONNECT  HTTP/1.1\r\n" +
             //    "Host: www.google.com.vn:443\r\n" +
             //    //"Proxy-Connection: keep-alive\r\n" +
             //    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36\r\n\r\n";
-            string request = "GET http://www.google.com/search?source=hp&ei=vTHlXO3tHofchwPQwY3IBg&q=ds&oq=ds&gs_l=psy-ab.12..35i39j0i67l2j0j0i131l2j0j0i131j0j0i131.96206.96298..96726...5.0..0.135.351.0j3......0....1..gws-wiz.....6.L7drwxthGy0 HTTP/1.1\r\n" +
-                "Host: www.google.com\r\n" +
-                "User-agent: Mozilla/5.0\r\n\r\n";
+            //string request = "GET / HTTP/1.0\r\n" +
+            //    "Host: soha.vn\r\n" +
+            //    "User-agent: Mozilla/5.0\r\n\r\n";
 
-            proxy.StartListen();
+
             //Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            //Uri uri = new Uri("http://www.google.com/");
+            //Uri uri = new Uri("http://soha.vn");
             //socket.Connect(uri.Host, 80);
             //socket.Send(Encoding.ASCII.GetBytes(request));
             //string response = string.Empty;
@@ -37,19 +39,29 @@ namespace ProxyServer
             //    response += Encoding.ASCII.GetString(bytes, 0, receiv);
 
             //    Thread.Sleep(100);
-            //    if (receiv == 0 || receiv < 102400)
+            //    if (receiv== 0)
             //        break;
             //}
 
             //Console.WriteLine(response);
+
+
             byte[] bytes = new byte[1024000];
             WebClient client = new WebClient();
-            Uri uri = new Uri("http://www.google.com/search?ei=_GLmXIiOO5nAoATE6ZigCA&q=what+is+makefile&oq=what+is+makefile&gs_l=psy-ab.3..0i71l8.0.0..482691...0.0..0.0.0.......0......gws-wiz.LnDkgmIj8lQ");
+            Uri uri = new Uri("http://www.soha.vn/");
+            string response = "";
             Console.WriteLine(uri.PathAndQuery);
             Stream stream = client.OpenRead(uri);
-            int receiv = stream.Read(bytes, 0, 1024000);
-            Console.WriteLine(receiv);
-            Console.WriteLine(Encoding.ASCII.GetString(bytes, 0, receiv));
+            while (true)
+            {
+                int receiv = stream.Read(bytes, 0, 1024000);
+                response += Encoding.ASCII.GetString(bytes, 0, receiv);
+
+                Thread.Sleep(100);
+                if (receiv == 0)
+                    break;
+            }
+            Console.WriteLine(response);
             Console.ReadKey();
         }
 

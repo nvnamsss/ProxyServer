@@ -13,6 +13,8 @@ namespace ProxyServer.Class
     {
         public static int CAPACITY { get; } = 5242880;
 
+        public Proxy Parent { get; set; }
+
         public Thread ProcessThread { get; set; }
         public int Timeout { get; set; }
         public string Name { get; set; }
@@ -24,24 +26,29 @@ namespace ProxyServer.Class
 
         public BridgeConnection()
         {
-            SocketClient = new Client();
+            SocketClient = new Client(this);
 
-            WebClient = new SWebClient();
+            WebClient = new SWebClient(this);
             Timeout = 0;
 
-            ProcessThread = new Thread(new ThreadStart(Process));
-            ProcessThread.Start();
+            //ProcessThread = new Thread(new ThreadStart(Process));
+            //ProcessThread.Start();
+
+            Process();
         }
 
         public BridgeConnection(Socket client)
         {
-            SocketClient = new Client();
-            SocketClient.Socket = client;
+            SocketClient = new Client(this, client);
+
+            WebClient = new SWebClient(this);
 
             Timeout = 0;
 
-            ProcessThread = new Thread(new ThreadStart(Process));
-            ProcessThread.Start();
+            //ProcessThread = new Thread(new ThreadStart(Process));
+            //ProcessThread.Start();
+
+            Process();
         }   
 
         public void Process()
@@ -52,6 +59,7 @@ namespace ProxyServer.Class
 
             if (Side)
             {
+                Console.WriteLine("Receive client");
                 SocketClient.Receive();
             }
             else
@@ -60,11 +68,14 @@ namespace ProxyServer.Class
 
                 WebClient.Read();
             }
-        }   
+        }
 
         
         public void Close()
         {
+            WebClient.Close();
+            SocketClient.Close();
+            Parent.Remove(Name);
         }
 
         private void ReceivedClientCallback(object sender, ReceivedEventArgs e)
@@ -77,17 +88,17 @@ namespace ProxyServer.Class
             Console.WriteLine("Received from server: {0}\n", e.Data);
         }
 
-        private async void ProcessClientMessage(string message)
+        public void ProcessClientMessage(string message)
         {
             HttpMessage httpMessage = new HttpMessage(message);
             httpMessage.Resolve();
             switch (httpMessage.Method)
             {
                 case HttpMethod.CONNECT:
-                    WebClient.Connect(httpMessage.Uri);
-                    ResponseConnect();
+                    Close();
                     break;
                 case HttpMethod.GET:
+                    ResponseConnect();
                     WebClient.Connect(httpMessage.Uri);
                     SendGetRequest(message);
                     break;
@@ -96,14 +107,12 @@ namespace ProxyServer.Class
                     break;
             }
 
-            //await SendGetRequest(httpMessage);
-            Side = false;
-            Console.WriteLine("Side " + Side);
         }
 
-        private void ProcessServerMessage(string message)
+        public void ProcessServerMessage(string message)
         {
-            byte[] bytes = Encoding.ASCII.GetBytes(message);
+            //byte[] bytes = Encoding.ASCII.GetBytes(message);
+            SocketClient.Send(message);
         }
 
         private void ResponseConnect()
@@ -130,7 +139,8 @@ namespace ProxyServer.Class
         }
         private void Send403()
         {
-            string response = "HTTP/1.1 403 Forbidden\r\n";
+            string response = "HTTP/1.1 403 For bidden\r\n";
+            SocketClient.Send(response);
         }
     }
 }
