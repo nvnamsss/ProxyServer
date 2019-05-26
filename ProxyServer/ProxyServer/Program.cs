@@ -16,7 +16,7 @@ namespace ProxyServer
         static void Main(string[] args)
         {
             Proxy proxy = new Proxy();
-            //proxy.StartListen();
+            proxy.StartListen();
 
             //string request = "CONNECT  HTTP/1.1\r\n" +
             //    "Host: www.google.com.vn:443\r\n" +
@@ -46,22 +46,22 @@ namespace ProxyServer
             //Console.WriteLine(response);
 
 
-            byte[] bytes = new byte[1024000];
-            WebClient client = new WebClient();
-            Uri uri = new Uri("http://www.soha.vn/");
-            string response = "";
-            Console.WriteLine(uri.PathAndQuery);
-            Stream stream = client.OpenRead(uri);
-            while (true)
-            {
-                int receiv = stream.Read(bytes, 0, 1024000);
-                response += Encoding.ASCII.GetString(bytes, 0, receiv);
+            //byte[] bytes = new byte[1024000];
+            //WebClient client = new WebClient();
+            //Uri uri = new Uri("http://www.soha.vn/");
+            //string response = "";
+            //Console.WriteLine(uri.PathAndQuery);
+            //Stream stream = client.OpenRead(uri);
+            //while (true)
+            //{
+            //    int receiv = stream.Read(bytes, 0, 1024000);
+            //    response += Encoding.ASCII.GetString(bytes, 0, receiv);
 
-                Thread.Sleep(100);
-                if (receiv == 0)
-                    break;
-            }
-            Console.WriteLine(response);
+            //    Thread.Sleep(100);
+            //    if (receiv == 0)
+            //        break;
+            //}
+            //Console.WriteLine(response);
             Console.ReadKey();
         }
 

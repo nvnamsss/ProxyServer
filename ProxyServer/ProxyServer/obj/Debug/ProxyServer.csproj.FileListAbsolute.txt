@@ -21,3 +21,12 @@ D:\Git\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.exe
 D:\Git\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.pdb
 D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.exe
 D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.pdb
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.exe.config
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.exe
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ProxyServer.pdb
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csprojAssemblyReference.cache
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csproj.CoreCompileInputs.cache
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ICSharpCode.SharpZipLib.dll
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ICSharpCode.SharpZipLib.pdb
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ICSharpCode.SharpZipLib.xml
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csproj.CopyComplete

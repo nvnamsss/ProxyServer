@@ -118,7 +118,7 @@ namespace ProxyServer.Class
                 // Complete sending the data to the remote device.  
                 int bytesSent = client.EndSend(ar);
                 Console.WriteLine("Sent {0} bytes to browser.", bytesSent);
-
+                
                 // Signal that all bytes have been sent.  
                 SendDone.Set();
             }

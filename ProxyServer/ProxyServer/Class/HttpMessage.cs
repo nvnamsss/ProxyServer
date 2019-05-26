@@ -11,6 +11,7 @@ namespace ProxyServer.Class
         private string Message { get; set; }
         public string Command { get; set; }
         public string Version { get; set; }
+        public string Content { get; set; }
         public Dictionary<string, string> Headers { get; set; }
         public HttpMethod Method { get; set; }
         public Uri Uri { get; set; }
@@ -30,6 +31,8 @@ namespace ProxyServer.Class
                 HttpMethod method;
 
                 string[] lines = Message.Replace("\r", "").Split('\n');
+
+                Content = Message.Substring(Message.IndexOf("\r\n\r\n")).Replace("\r\n\r\n", "");
             
                 foreach (string line in lines)
                 {
@@ -45,8 +48,16 @@ namespace ProxyServer.Class
                         {
                             Method = method;
                         }
+                        else
+                        {
+                            Method = HttpMethod.None;
+                        }
 
-                        Uri = new Uri(split[1].Replace("https", "http"));
+                        if (Method != HttpMethod.None)
+                        {
+                            Uri = new Uri(split[1]);
+                        }
+
 
                         Version = split[2];
                         //Console.WriteLine("Method: " + Method + " Version: " + Version);
@@ -68,8 +79,8 @@ namespace ProxyServer.Class
                         }
 
                         //Console.WriteLine("Key: " + split[0] + " Value: " + value);
-
-                        Headers.Add(key, value);
+                        if (!Headers.ContainsKey(key))
+                            Headers.Add(key, value);
                     }
 
                 }
@@ -90,6 +101,7 @@ namespace ProxyServer.Class
 
         public override string ToString()
         {
+          
             string content = "HTTP Message" + Environment.NewLine +
                 "Method: " + Method + Environment.NewLine;
             return content;
@@ -103,4 +115,6 @@ namespace ProxyServer.Class
         GET,
         None
     }
+
+   
 }

@@ -98,12 +98,11 @@ namespace ProxyServer.Class
                     Close();
                     break;
                 case HttpMethod.GET:
-                    ResponseConnect();
+                    //ResponseConnect();
                     WebClient.Connect(httpMessage.Uri);
                     SendGetRequest(message);
                     break;
                 case HttpMethod.POST:
-
                     break;
             }
 
@@ -117,7 +116,8 @@ namespace ProxyServer.Class
 
         private void ResponseConnect()
         {
-            string response = "HTTP/1.1 200 OK\r\n";
+            string response = "HTTP/1.1 200 OK\r\n";// +
+                //"Content-Type: text/plain\r\n\r\n";
             SocketClient.Send(response);
             Console.WriteLine(response);
         }
@@ -131,15 +131,20 @@ namespace ProxyServer.Class
 
         private void SendGetRequest(HttpMessage message)
         {
-            string request = "GET " + message.Uri.PathAndQuery + "/ HTTP/1.1\r\n" +
-                "Host: " + message.GetHost() + "\r\n" +
+            string request = "GET http://soha.vn/ HTTP/1.1" +
+                "Host: soha.vn\r\n" +
                 "User-agent: Mozilla/5.0\r\n\r\n";
             WebClient.Send(request);
             return;
         }
         private void Send403()
         {
-            string response = "HTTP/1.1 403 For bidden\r\n";
+            string response = "HTTP/1.1 403 Not Found\r\n" +
+            "Content-Type: text/html\r\n\r\n" +
+                "<!DOCTYPE html>\r\n" +
+                                "<html>\r\n" +
+                                "<h1>403 You cant go further</h1>\r\n" +
+                                "<html>\r\n";
             SocketClient.Send(response);
         }
     }

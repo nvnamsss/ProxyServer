@@ -1,7 +1,9 @@
-﻿using ProxyServer.AsyncSocket.Client;
+﻿using ICSharpCode.SharpZipLib.GZip;
+using ProxyServer.AsyncSocket.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -96,14 +98,35 @@ namespace ProxyServer.Class
                     handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                     new AsyncCallback(ReadCallback), state);
                 }
-                Console.WriteLine(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
-
+                Console.WriteLine("Received {0} bytes from webserver", bytesRead);
+                Console.WriteLine("Received from webserver: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                Parent.ProcessServerMessage(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                HttpMessage message = new HttpMessage(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                message.Resolve();
+                
+                //Console.WriteLine("content: " + DecompressString(Encoding.ASCII.GetString(state.buffer, 0, bytesRead)));
             }
             else
             {
-                    Parent.ProcessServerMessage(content);
-
+                Parent.ProcessServerMessage(content);
             }
+        }
+
+        public byte[] DecompressString(byte[] data)
+        {
+            using (var compressedStream = new MemoryStream(data))
+            using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+            using (var resultStream = new MemoryStream())
+            {
+                zipStream.CopyTo(resultStream);
+                return resultStream.ToArray();
+            }
+        }
+
+        public string DecompressString(string data)
+        {
+            string content = Encoding.ASCII.GetString(DecompressString(Encoding.ASCII.GetBytes(data)));
+            return content;
         }
 
         public void Send(string data)
