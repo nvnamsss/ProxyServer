@@ -1,5 +1,4 @@
-﻿using ICSharpCode.SharpZipLib.GZip;
-using ProxyServer.AsyncSocket.Client;
+﻿using ProxyServer.AsyncSocket.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -100,9 +99,10 @@ namespace ProxyServer.Class
                 }
                 Console.WriteLine("Received {0} bytes from webserver", bytesRead);
                 Console.WriteLine("Received from webserver: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                Parent.ProcessServerMessage(state.buffer, 0, bytesRead);
                 Parent.ProcessServerMessage(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
-                HttpMessage message = new HttpMessage(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
-                message.Resolve();
+                //HttpMessage message = new HttpMessage(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                //message.Resolve();
                 
                 //Console.WriteLine("content: " + DecompressString(Encoding.ASCII.GetString(state.buffer, 0, bytesRead)));
             }

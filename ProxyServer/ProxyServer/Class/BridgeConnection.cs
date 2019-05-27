@@ -114,6 +114,12 @@ namespace ProxyServer.Class
             SocketClient.Send(message);
         }
 
+        public void ProcessServerMessage(byte[] bytes, int start, int length)
+        {
+            //byte[] bytes = Encoding.ASCII.GetBytes(message);
+            SocketClient.Send(bytes, start, length);
+        }
+
         private void ResponseConnect()
         {
             string response = "HTTP/1.1 200 OK\r\n";// +

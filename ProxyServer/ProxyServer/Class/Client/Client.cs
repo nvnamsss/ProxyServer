@@ -108,6 +108,11 @@ namespace ProxyServer.Class
                 new AsyncCallback(SendCallback), Socket);
         }
 
+        public void Send(byte[] bytes, int start, int length)
+        {
+            Socket.BeginSend(bytes, start, length, 0, new AsyncCallback(SendCallback), Socket);
+        }
+
         private void SendCallback(IAsyncResult ar)
         {
             try
