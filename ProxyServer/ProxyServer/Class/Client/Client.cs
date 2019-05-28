@@ -76,16 +76,15 @@ namespace ProxyServer.Class
                 {
                     state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
 
-                    Console.WriteLine("hi mom");
-
                     // All the data has arrived; put it in response.  
 
                     if (state.sb.Length > 1)
                     {
                         Response = state.sb.ToString();
                         Console.WriteLine("Response: " + Response);
+                        ReceiveDone.Set();
                         Parent.ProcessClientMessage(Response);
-
+                        return;
                     }
                     //Console.WriteLine("Received data from Browser: \r\n", Response);
                     // Signal that all bytes have been received.  
@@ -108,8 +107,10 @@ namespace ProxyServer.Class
                 new AsyncCallback(SendCallback), Socket);
         }
 
+        public int Sended { get; set; }
         public void Send(byte[] bytes, int start, int length)
         {
+            Sended = 0;
             Socket.BeginSend(bytes, start, length, 0, new AsyncCallback(SendCallback), Socket);
         }
 
@@ -119,9 +120,10 @@ namespace ProxyServer.Class
             {
                 // Retrieve the socket from the state object.  
                 Socket client = (Socket)ar.AsyncState;
-
+                
                 // Complete sending the data to the remote device.  
                 int bytesSent = client.EndSend(ar);
+                
                 Console.WriteLine("Sent {0} bytes to browser.", bytesSent);
                 
                 // Signal that all bytes have been sent.  
@@ -135,10 +137,10 @@ namespace ProxyServer.Class
 
         public void Close()
         {
-            SendDone.Set();
-            ConnectDone.Set();
-            ReceiveDone.Set();
-            Socket.Shutdown(SocketShutdown.Both);
+            //SendDone.Set();
+            //ConnectDone.Set();
+            //ReceiveDone.Set();
+            //Socket.Shutdown(SocketShutdown.Both);
             Socket.Close();
             ConnectDone.Close();
             ReceiveDone.Close();
