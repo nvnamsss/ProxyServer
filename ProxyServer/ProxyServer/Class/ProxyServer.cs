@@ -36,7 +36,6 @@ namespace ProxyServer.Class
             IPEndPoint = new IPEndPoint(IPAddress, ConstantProperty.PROXY_PORT);
             Connections = new List<BridgeConnection>(10);
             BlackList = new List<string>();
-
             Run();
         }
 
@@ -57,7 +56,6 @@ namespace ProxyServer.Class
                 {
                     Socket handler = SocketListener.Accept();
                   
-                    Console.WriteLine("New Connection");
                     lock (Connections)
                     {
                         Connections.Add(new BridgeConnection(handler));
@@ -81,7 +79,6 @@ namespace ProxyServer.Class
 
         public void Remove(string name)
         {
-            Console.WriteLine("Remove");
             for (int loop = 0; loop < Connections.Count; loop++)
             {
                 if (Connections[loop].Name.Equals(name))
@@ -95,7 +92,7 @@ namespace ProxyServer.Class
         {
             for (int loop = 0; loop < Connections.Count; loop++)
             {
-
+                
             }
             if (SocketSender.Connected)
             {
@@ -113,7 +110,7 @@ namespace ProxyServer.Class
             bool isBanned = false;
             //Console.WriteLine("Checking black list for {0}", host);
 
-            if (host != "www.google.com")
+            if (BlackList.Contains(host))
             {
                 isBanned = true;
             }

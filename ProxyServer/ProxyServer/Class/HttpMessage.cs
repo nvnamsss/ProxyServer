@@ -90,12 +90,24 @@ namespace ProxyServer.Class
 
         public string GetHost()
         {
-            return Headers["Host"].Split(':')[0];
+            if (Headers.ContainsKey("Host"))
+            {
+                if (Headers["Host"].Contains(":"))
+                {
+                    return Headers["Host"].Split(':')[0];
+                }
+                else
+                {
+                    return Headers["Host"];
+                }
+            }
+
+            return "";
         }
 
         public int GetPort()
         {
-            return 443;
+            return 80;
             //return int.Parse(Headers["Host"].Split(':')[1]);
         }
 

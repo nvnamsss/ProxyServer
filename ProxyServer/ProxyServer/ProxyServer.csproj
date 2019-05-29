@@ -53,6 +53,7 @@
     <Compile Include="Class\Client\Client.cs" />
     <Compile Include="Class\ConstantProperty.cs" />
     <Compile Include="Class\Event.cs" />
+    <Compile Include="Class\HttpCache.cs" />
     <Compile Include="Class\HttpMessage.cs" />
     <Compile Include="Class\ProxyServer.cs" />
     <Compile Include="Class\Utils.cs" />

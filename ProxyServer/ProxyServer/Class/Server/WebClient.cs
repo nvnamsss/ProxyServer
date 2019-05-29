@@ -16,11 +16,12 @@ namespace ProxyServer.Class
     {
         public BridgeConnection Parent { get; set; }
         public static int CAPACITY { get; } = 5242880;
-        public static ManualResetEvent allDone = new ManualResetEvent(false);
+        private ManualResetEvent SendDone = new ManualResetEvent(false);
+        private ManualResetEvent ReceiveDone = new ManualResetEvent(false);
         public Dictionary<string, string> Headers { get; set; }
         private Socket Socket { get; set; }
         private HttpMessage Message { get; set; }
-        private byte[] Bytes { get; set; }
+        private List<byte> Bytes { get; set; }
         private Uri Address { get; set; }
         private NetworkStream Stream = null;
 
@@ -28,7 +29,10 @@ namespace ProxyServer.Class
         {
             Headers = new Dictionary<string, string>();
             Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            Bytes = new byte[CAPACITY];
+            Bytes = new List<byte>();
+
+            Socket.ReceiveBufferSize = 262140;
+            Socket.SendBufferSize = 262140;
             Parent = parent;
         }
 
@@ -36,10 +40,12 @@ namespace ProxyServer.Class
         {
             Headers = new Dictionary<string, string>();
             Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            Bytes = new byte[CAPACITY];
+            Bytes = new List<byte>();
             Address = new Uri(address);
+
             Socket.Connect(Address.Host, Address.Port);
-            Stream = new NetworkStream(Socket);
+            Socket.ReceiveBufferSize = 262140;
+            Socket.SendBufferSize = 262140;
             Parent = parent;
         }
 
@@ -61,54 +67,39 @@ namespace ProxyServer.Class
             Address = uri;
         }
 
+        public void Read()
+        {
+            StateObject state = new StateObject();
+            Bytes.Clear();
+            state.workSocket = Socket;
+            SocketError error;
+            state.workSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, out error, new AsyncCallback(ReadCallback), state);
+        }
+
         public void ReadCallback(IAsyncResult ar)
         {
-            String content = String.Empty;
-
-            // Retrieve the state object and the handler socket  
-            // from the asynchronous state object.  
+            string content = string.Empty;
             StateObject state = (StateObject)ar.AsyncState;
             Socket handler = state.workSocket;
-
-            // Read data from the client socket.   
+            
             int bytesRead = handler.EndReceive(ar);
 
             if (bytesRead > 0)
             {
-                // There  might be more data, so store the data received so far.  
-                state.sb.Append(Encoding.ASCII.GetString(
-                    state.buffer, 0, bytesRead));
+                state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
 
-                // Check for end-of-file tag. If it is not there, read   
-                // more data.  
+                Bytes.AddRange(state.buffer);
+               
                 content = state.sb.ToString();
-                if (content.IndexOf("<EOF>") > -1)
-                {
-                    // All the data has been read from the   
-                    // client. Display it on the console.  
-                    Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
-                        content.Length, content);
-                    // Echo the data back to the client.  
-                    //Send(handler, content);
-                }
-                else
-                {
-                    // Not all data received. Get more.  
-                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-                    new AsyncCallback(ReadCallback), state);
-                }
-                Console.WriteLine("Received {0} bytes from webserver", bytesRead);
-                Console.WriteLine("Received from webserver: " + Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
-                Parent.ProcessServerMessage(state.buffer, 0, bytesRead);
-                Parent.ProcessServerMessage(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
-                //HttpMessage message = new HttpMessage(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
-                //message.Resolve();
-                
-                //Console.WriteLine("content: " + DecompressString(Encoding.ASCII.GetString(state.buffer, 0, bytesRead)));
+                handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReadCallback), state);
             }
             else
             {
-                Parent.ProcessServerMessage(content);
+                if (Bytes.Count > 0)
+                {
+                    Parent.ProcessServerMessage(Bytes.ToArray(), 0, Bytes.Count);
+                    Bytes.Clear();
+                }
             }
         }
 
@@ -123,42 +114,27 @@ namespace ProxyServer.Class
             }
         }
 
-        public string DecompressString(string data)
-        {
-            string content = Encoding.ASCII.GetString(DecompressString(Encoding.ASCII.GetBytes(data)));
-            return content;
-        }
-
         public void Send(string data)
         {
-            // Convert the string data to byte data using ASCII encoding.  
             byte[] byteData = Encoding.ASCII.GetBytes(data);
-
-            // Begin sending the data to the remote device.  
-            Socket.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(SendCallback), Socket);
-        }
-
-        public void Read()
-        {
-            StateObject state = new StateObject();
-            state.workSocket = Socket;
-            SocketError error;
-            state.workSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, out error, new AsyncCallback(ReadCallback), state);
+            Socket.BeginSend(byteData, 0, byteData.Length, 0, new AsyncCallback(SendCallback), Socket);
         }
 
         private void SendCallback(IAsyncResult ar)
         {
             try
             {
-                // Retrieve the socket from the state object.  
                 Socket handler = (Socket)ar.AsyncState;
-
-                // Complete sending the data to the remote device.  
                 int bytesSent = handler.EndSend(ar);
                 Console.WriteLine("Sent {0} bytes to WebServer.", bytesSent);
 
                 Read();
+                Task.Factory.StartNew(() =>
+                {
+                    Read();
+                });
+                SendDone.Set();
+
             }
             catch (Exception e)
             {
@@ -168,9 +144,7 @@ namespace ProxyServer.Class
 
         public void Close()
         {
-            //Socket.Shutdown(SocketShutdown.Both);
             Socket.Close();
-            allDone.Close();
             if (Stream != null)
             {
                 Stream.Close();
