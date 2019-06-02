@@ -96,8 +96,14 @@ namespace ProxyServer.Class
         {
             if (Headers.ContainsKey("Host"))
             {
-                Uri uri = new Uri(Headers["Host"]);
-                return uri.Host;
+                if (Headers["Host"].Contains(":"))
+                {
+                    return Headers["Host"].Split(':')[0];
+                }
+                else
+                {
+                    return Headers["Host"];
+                }
             }
 
             return "";

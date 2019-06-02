@@ -100,6 +100,7 @@ namespace ProxyServer.Class
                     SendGetRequest(message);
                     break;
                 case HttpMethod.POST:
+                    Console.WriteLine(httpMessage.GetHost());
                     if (Parent.CheckBlackList(httpMessage.GetHost()))
                     {
                         Send403();

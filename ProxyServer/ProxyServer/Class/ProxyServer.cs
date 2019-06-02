@@ -12,6 +12,7 @@ namespace ProxyServer.Class
 {
     public class Proxy
     {
+        public static Proxy Instance { get; set; }
         private string BlacklistPath { get; set; }
         public Socket SocketListener { get; set; }
         public Socket SocketSender { get; set;}
@@ -26,6 +27,7 @@ namespace ProxyServer.Class
 
         public Proxy()
         {
+            Instance = this;
             string address = Utils.GetAddress(ConstantProperty.PROXY_HOST, ConstantProperty.PROXY_PORT);
             //IPAddress = IPAddress.Parse(ConstantProperty.PROXY_HOST);
             //IPEndPoint = new IPEndPoint(IPAddress, ConstantProperty.PROXY_PORT);
