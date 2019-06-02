@@ -14,7 +14,7 @@ namespace ProxyServer.Class
         public string Content { get; set; }
         public Dictionary<string, string> Headers { get; set; }
         public HttpMethod Method { get; set; }
-        public Uri Uri { get; set; }
+        public Uri HttpUri { get; set; }
 
         public HttpMessage(string message)
         {
@@ -55,7 +55,11 @@ namespace ProxyServer.Class
 
                         if (Method != HttpMethod.None)
                         {
-                            Uri = new Uri(split[1]);
+                            Uri uri;
+                            if (Uri.TryCreate(split[1], UriKind.RelativeOrAbsolute, out uri))
+                            {
+                                HttpUri = uri;
+                            }
                         }
 
 
@@ -90,12 +94,18 @@ namespace ProxyServer.Class
 
         public string GetHost()
         {
-            return Headers["Host"].Split(':')[0];
+            if (Headers.ContainsKey("Host"))
+            {
+                Uri uri = new Uri(Headers["Host"]);
+                return uri.Host;
+            }
+
+            return "";
         }
 
         public int GetPort()
         {
-            return 443;
+            return 80;
             //return int.Parse(Headers["Host"].Split(':')[1]);
         }
 

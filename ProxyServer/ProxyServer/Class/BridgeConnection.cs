@@ -31,9 +31,6 @@ namespace ProxyServer.Class
             WebClient = new SWebClient(this);
             Timeout = 0;
 
-            //ProcessThread = new Thread(new ThreadStart(Process));
-            //ProcessThread.Start();
-
             Process();
         }
 
@@ -45,27 +42,20 @@ namespace ProxyServer.Class
 
             Timeout = 0;
 
-            //ProcessThread = new Thread(new ThreadStart(Process));
-            //ProcessThread.Start();
-
             Process();
         }   
 
         public void Process()
         {
             byte[] bytes = new byte[CAPACITY];
-            int total = 0;
-            string data = string.Empty;
 
             if (Side)
             {
-                Console.WriteLine("Receive client");
                 SocketClient.Receive();
             }
             else
             {
                 Console.WriteLine("Receive server");
-
                 WebClient.Read();
             }
         }
@@ -98,11 +88,27 @@ namespace ProxyServer.Class
                     Close();
                     break;
                 case HttpMethod.GET:
-                    //ResponseConnect();
-                    WebClient.Connect(httpMessage.Uri);
+                    if (Parent.CheckBlackList(httpMessage.GetHost()))
+                    {
+                        Send403();
+                        Close();
+                        return;
+                    }
+
+                    Console.WriteLine("[Response] - " + message);
+                    WebClient.Connect(httpMessage.HttpUri);
                     SendGetRequest(message);
                     break;
                 case HttpMethod.POST:
+                    if (Parent.CheckBlackList(httpMessage.GetHost()))
+                    {
+                        Send403();
+                        Close();
+                        return;
+                    }
+
+                    WebClient.Connect(httpMessage.HttpUri);
+                    SendPostRequest(message);
                     break;
             }
 
@@ -110,20 +116,17 @@ namespace ProxyServer.Class
 
         public void ProcessServerMessage(string message)
         {
-            //byte[] bytes = Encoding.ASCII.GetBytes(message);
             SocketClient.Send(message);
         }
 
         public void ProcessServerMessage(byte[] bytes, int start, int length)
         {
-            //byte[] bytes = Encoding.ASCII.GetBytes(message);
             SocketClient.Send(bytes, start, length);
         }
 
         private void ResponseConnect()
         {
-            string response = "HTTP/1.1 200 OK\r\n";// +
-                //"Content-Type: text/plain\r\n\r\n";
+            string response = "HTTP/1.1 200 OK\r\n";
             SocketClient.Send(response);
             Console.WriteLine(response);
         }
@@ -131,7 +134,6 @@ namespace ProxyServer.Class
         private void SendGetRequest(string message)
         {
             byte[] bytes = Encoding.ASCII.GetBytes(message);
-            SocketError error; 
             WebClient.Send(message);
         }
 
@@ -142,6 +144,11 @@ namespace ProxyServer.Class
                 "User-agent: Mozilla/5.0\r\n\r\n";
             WebClient.Send(request);
             return;
+        }
+
+        private void SendPostRequest(string message)
+        {
+            WebClient.Send(message);
         }
         private void Send403()
         {
