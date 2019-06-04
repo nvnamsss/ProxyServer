@@ -148,8 +148,11 @@ namespace ProxyServer.Class
 
         public void Close()
         {
-            Socket.Close();
-            Socket.Dispose();
+            if (Socket.Connected)
+            {
+                Socket.Close();
+            }
+
             if (Stream != null)
             {
                 Stream.Close();

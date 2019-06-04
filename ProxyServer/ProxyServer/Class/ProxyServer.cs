@@ -131,6 +131,11 @@ namespace ProxyServer.Class
                 string line;
                 while ((line = streamReader.ReadLine()) != null)
                 {
+                    if (line.Substring(0, 2).Equals("//") || line == string.Empty)
+                    {
+                        continue;
+                    }
+
                     BlackList.Add(line);
                 }
             }

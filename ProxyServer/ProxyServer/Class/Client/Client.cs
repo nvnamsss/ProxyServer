@@ -90,7 +90,10 @@ namespace ProxyServer.Class
 
         public void Send(byte[] bytes, int start, int length)
         {
-            Socket.BeginSend(bytes, start, length, 0, new AsyncCallback(SendCallback), Socket);
+            if (Socket.Connected)
+            {
+                Socket.BeginSend(bytes, start, length, 0, new AsyncCallback(SendCallback), Socket);
+            }
         }
 
         private void SendCallback(IAsyncResult ar)
@@ -102,7 +105,7 @@ namespace ProxyServer.Class
 
                 Console.WriteLine("Sent {0} bytes to browser.", bytesSent);
 
-                Parent.Close();
+                //Parent.Close();
             }
             catch (Exception e)
             {
