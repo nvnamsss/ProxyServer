@@ -92,7 +92,14 @@ namespace ProxyServer.Class
         {
             if (Socket.Connected)
             {
-                Socket.BeginSend(bytes, start, length, 0, new AsyncCallback(SendCallback), Socket);
+                try
+                {
+                    Socket.BeginSend(bytes, start, length, 0, new AsyncCallback(SendCallback), Socket);
+                }
+                catch (Exception e)
+                {
+
+                }
             }
         }
 
@@ -104,8 +111,9 @@ namespace ProxyServer.Class
                 int bytesSent = client.EndSend(ar);
 
                 Console.WriteLine("Sent {0} bytes to browser.", bytesSent);
-
-                //Parent.Close();
+                
+                if (Parent.WebClient.Remaining() == 0)
+                    Parent.Close();
             }
             catch (Exception e)
             {

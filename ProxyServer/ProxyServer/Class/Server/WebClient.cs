@@ -23,7 +23,6 @@ namespace ProxyServer.Class
         private HttpMessage Message { get; set; }
         private List<byte> Bytes { get; set; }
         private Uri Address { get; set; }
-        private NetworkStream Stream = null;
 
         public SWebClient(BridgeConnection parent)
         {
@@ -54,10 +53,6 @@ namespace ProxyServer.Class
             if (!Socket.Connected)
             {
                 Socket.Connect(host, port);
-                if (Socket.Connected)
-                {
-                    Stream = new NetworkStream(Socket);
-                }
             }
         }
 
@@ -146,16 +141,16 @@ namespace ProxyServer.Class
             }
         }
 
+        public int Remaining()
+        {
+            return Socket.Available;
+        }
+
         public void Close()
         {
             if (Socket.Connected)
             {
                 Socket.Close();
-            }
-
-            if (Stream != null)
-            {
-                Stream.Close();
             }
         }
     }
