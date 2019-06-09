@@ -119,20 +119,32 @@ namespace ProxyServer.Class
             return isBanned;
         }
         
-        public byte[] GetCache(string host)
+        public byte[] GetCache(string content)
         {
             for (int loop = 0; loop < Caches.Count; loop++)
             {
                 Console.WriteLine("Chaces: " + Caches[loop].Host);
-                if (Caches[loop].Host.Equals(host))
+                if (Caches[loop].Content.Equals(content))
                 {
                     Console.WriteLine(Caches[loop].Content.Length);
                     return Caches[loop].Content;
                 }
             }
 
-            Console.WriteLine("Host; " + host);
             return null;
+        }
+
+        public string GetHeader(string host)
+        {
+            for (int loop = 0; loop < Caches.Count; loop++)
+            {
+                if (Caches[loop].Host.Equals(host))
+                {
+                    return Caches[loop].Header;
+                }
+            }
+
+            return string.Empty;
         }
 
         public bool IsAlreadyCache(string host)

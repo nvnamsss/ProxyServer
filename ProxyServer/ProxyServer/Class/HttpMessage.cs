@@ -12,6 +12,7 @@ namespace ProxyServer.Class
         public string Command { get; set; }
         public string Version { get; set; }
         public string Content { get; set; }
+        public string Query { get; set; } = string.Empty;
         public Dictionary<string, string> Headers { get; set; }
         public HttpMethod Method { get; set; }
         public Uri HttpUri { get; set; }
@@ -59,6 +60,10 @@ namespace ProxyServer.Class
                             if (Uri.TryCreate(split[1], UriKind.RelativeOrAbsolute, out uri))
                             {
                                 HttpUri = uri;
+                            }
+                            else
+                            {
+                                Query = split[1];
                             }
                         }
 
@@ -113,6 +118,12 @@ namespace ProxyServer.Class
         {
             return 80;
             //return int.Parse(Headers["Host"].Split(':')[1]);
+        }
+
+        public bool IsCache()
+        {
+            bool cache = Headers.ContainsKey("Cache-Control") || Headers.ContainsKey("ETag") || Headers.ContainsKey("If-Modified-Since");
+            return cache;   
         }
 
         public override string ToString()

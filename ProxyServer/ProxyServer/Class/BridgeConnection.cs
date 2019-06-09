@@ -97,30 +97,14 @@ namespace ProxyServer.Class
                     }
 
                     Console.WriteLine("[Response] - " + message);
-                    byte[] bytes;
 
+                    Console.WriteLine("Query: " + httpMessage.HttpUri.Query);
+
+                    WebClient.IsCache = httpMessage.IsCache();
                     
-                    if ((bytes = Proxy.Instance.GetCache(httpMessage.GetHost())) != null)
-                    {
-                        Console.WriteLine("Yes, indeed");
-                        if (bytes.Length > 4096)
-                        {
-                            Console.WriteLine("Hi mom");
-                            ProcessServerMessage(bytes, 0, bytes.Length);
-                        }
-                        else
-                        {
-                            WebClient.Connect(httpMessage.HttpUri);
-                            SendGetRequest(message);
-                        }
-                    }
-                    else
-                    {
-                        WebClient.Connect(httpMessage.HttpUri);
-                        SendGetRequest(message);
-                    }
-
-
+                    WebClient.Connect(httpMessage.HttpUri);
+                    WebClient.Content = message;
+                    SendGetRequest(message);
 
                     break;
                 case HttpMethod.POST:
@@ -141,11 +125,81 @@ namespace ProxyServer.Class
 
         public void ProcessServerMessage(string message)
         {
+            HttpRespone respone = new HttpRespone(message);
+            respone.Resolve();
+
+            if (respone.StatusCode == HttpStatusCode.NotModified)
+            {
+                byte[] bytes;
+                bytes = Proxy.Instance.GetCache(WebClient.Content);
+
+                if (bytes != null)
+                {
+                    SocketClient.Send(bytes, 0, bytes.Length);
+                }
+                else
+                {
+
+                }
+
+                return;
+            }
+            else
+            {
+                if (WebClient.IsCache)
+                {
+                    HttpCache cache = new HttpCache();
+                }
+            }
+
             SocketClient.Send(message);
         }
 
         public void ProcessServerMessage(byte[] bytes, int start, int length)
         {
+            StringBuilder message = new StringBuilder();
+            message.Append(Encoding.ASCII.GetString(bytes, start, length));
+            
+            HttpRespone respone = new HttpRespone(message.ToString());
+            respone.Resolve();
+
+            try
+            {
+                if (respone.StatusCode == HttpStatusCode.NotModified)
+                {
+                    byte[] bytesCache;
+                    bytesCache = Proxy.Instance.GetCache(WebClient.Content);
+
+                    if (bytes != null)
+                    {
+                        SocketClient.Send(bytesCache, 0, bytes.Length);
+                    }
+                    else
+                    {
+
+                    }
+
+                    return;
+                }
+                else
+                {
+                    if (WebClient.IsCache)
+                    {
+                        HttpCache cache = new HttpCache();
+                        cache.Content = bytes;
+                        cache.Host = WebClient.Address.Host;
+                        cache.Header = WebClient.Content;
+                        cache.SaveFile();
+                        Proxy.Instance.Caches.Add(cache);
+                    }
+                }
+            }
+            catch
+            {
+                SocketClient.Send(bytes, start, length);
+                return;
+            }
+
             SocketClient.Send(bytes, start, length);
         }
 

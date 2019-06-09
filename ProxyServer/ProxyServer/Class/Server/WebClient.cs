@@ -18,15 +18,15 @@ namespace ProxyServer.Class
         public static int CAPACITY { get; } = 5242880;
         private ManualResetEvent SendDone = new ManualResetEvent(false);
         private ManualResetEvent ReceiveDone = new ManualResetEvent(false);
-        public Dictionary<string, string> Headers { get; set; }
+        public string Content { get; set; }
+        public bool IsCache { get; set; }
         private Socket Socket { get; set; }
         private HttpMessage Message { get; set; }
         private List<byte> Bytes { get; set; }
-        private Uri Address { get; set; }
+        public Uri Address { get; set; }
 
         public SWebClient(BridgeConnection parent)
         {
-            Headers = new Dictionary<string, string>();
             Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             Bytes = new List<byte>();
 
@@ -37,7 +37,6 @@ namespace ProxyServer.Class
 
         public SWebClient(BridgeConnection parent, string address)
         {
-            Headers = new Dictionary<string, string>();
             Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             Bytes = new List<byte>();
             Address = new Uri(address);
@@ -93,18 +92,6 @@ namespace ProxyServer.Class
             {
                 if (bytesRead < handler.ReceiveBufferSize && bytesRead > 0)
                 {
-                    Console.WriteLine("yes");
-                    if (bytesRead > 4096)
-                    {
-                        if (!Proxy.Instance.IsAlreadyCache(Address.Host) && !HttpCache.IsAlreadyCache(Address.Host))
-                        {
-                            HttpCache cache = new HttpCache();
-                            cache.Host = Address.Host;
-                            cache.Content = state.buffer;
-                            cache.SaveFile();
-                            Proxy.Instance.Caches.Add(cache);
-                        }
-                    }
                     content = state.sb.ToString();
                     Parent.ProcessServerMessage(state.buffer, 0, bytesRead);
                     return;
@@ -116,9 +103,17 @@ namespace ProxyServer.Class
                 return;
             }
 
-            if (bytesRead == handler.ReceiveBufferSize)
+            try
             {
-                handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReadCallback), state);
+                if (bytesRead == handler.ReceiveBufferSize)
+                {
+                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReadCallback), state);
+                }
+            }
+            catch (ObjectDisposedException ode)
+            {
+                Parent.Close();
+                return;
             }
         }
 

@@ -30,3 +30,8 @@ D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ICShar
 D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ICSharpCode.SharpZipLib.pdb
 D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\ICSharpCode.SharpZipLib.xml
 D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csproj.CopyComplete
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\System.Net.Http.Extensions.dll
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\System.Net.Http.Primitives.dll
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\System.Net.Http.Extensions.xml
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\bin\Debug\System.Net.Http.Primitives.xml
+D:\All Project\Git\Server\Server\Server\ProxyServer\ProxyServer\obj\Debug\ProxyServer.csproj.App.config

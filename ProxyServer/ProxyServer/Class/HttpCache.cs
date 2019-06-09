@@ -12,15 +12,31 @@ namespace ProxyServer.Class
         public static HttpCache Empty = new HttpCache();
         public byte[] Content { get; set; }
         public string Host { get; set; }
-        
+        public string Query { get; set; }
+        public string Header { get; set; }
+
         public void SaveFile()
         {
-            string path = Utils.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory, "Cache");
-            string filename = Host + ".cache";
-            path = Path.Combine(path, filename);
-            FileStream stream = new FileStream(path, FileMode.CreateNew);
-            stream.Write(Content, 0, Content.Length);
-            stream.Close();
+            string pathCache = Utils.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory, "Cache");
+            string fileCache = Host + ".cache";
+            string fileHeader = Host + ".hdr";
+            fileCache = Path.Combine(pathCache, fileCache);
+            fileHeader = Path.Combine(pathCache, fileHeader);
+
+            try
+            {
+                FileStream streamCache = new FileStream(fileCache, FileMode.CreateNew);
+
+                streamCache.Write(Content, 0, Content.Length);
+
+                File.WriteAllText(fileHeader, Header);
+
+                streamCache.Close();
+            }
+            catch
+            {
+
+            }
         }
 
         static public List<HttpCache> CacheFromDirectory(string path)
@@ -48,16 +64,22 @@ namespace ProxyServer.Class
         {
             if (File.Exists(path))
             {
-
                 FileStream stream = File.OpenRead(path);
                 FileInfo info = new FileInfo(path);
                 HttpCache cache = new HttpCache();
 
+                string header = File.ReadAllText(path.Replace(".cache", ".hdr"));
                 byte[] bytes = new byte[stream.Length];
                 stream.Read(bytes, 0, (int)stream.Length);
 
                 cache.Host = info.Name.Replace(info.Extension, "");
                 cache.Content = bytes;
+                cache.Header = header;
+
+                HttpMessage message = new HttpMessage(Encoding.UTF8.GetString(bytes));
+                message.Resolve();
+
+                cache.Query = message.Query;
 
                 stream.Close();
                 return cache;
