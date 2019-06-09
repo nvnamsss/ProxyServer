@@ -88,11 +88,31 @@ namespace ProxyServer.Class
 
                 //Bytes.AddRange(state.buffer);
             }
-            
-            if (bytesRead < handler.ReceiveBufferSize && bytesRead > 0)
+
+            try
             {
-                content = state.sb.ToString();
-                Parent.ProcessServerMessage(state.buffer, 0, bytesRead);
+                if (bytesRead < handler.ReceiveBufferSize && bytesRead > 0)
+                {
+                    Console.WriteLine("yes");
+                    if (bytesRead > 4096)
+                    {
+                        if (!Proxy.Instance.IsAlreadyCache(Address.Host) && !HttpCache.IsAlreadyCache(Address.Host))
+                        {
+                            HttpCache cache = new HttpCache();
+                            cache.Host = Address.Host;
+                            cache.Content = state.buffer;
+                            cache.SaveFile();
+                            Proxy.Instance.Caches.Add(cache);
+                        }
+                    }
+                    content = state.sb.ToString();
+                    Parent.ProcessServerMessage(state.buffer, 0, bytesRead);
+                    return;
+                }
+            }
+            catch (ObjectDisposedException ode)
+            {
+                Parent.Close();
                 return;
             }
 
@@ -143,7 +163,14 @@ namespace ProxyServer.Class
 
         public int Remaining()
         {
-            return Socket.Available;
+            try
+            {
+                return Socket.Available;
+            }
+            catch (ObjectDisposedException ode)
+            {
+                return 0;
+            }
         }
 
         public void Close()

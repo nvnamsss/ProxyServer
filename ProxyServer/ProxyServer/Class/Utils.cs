@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,18 @@ namespace ProxyServer.Class
 {
     public class Utils
     {
+        public static string CreateDirectory(string path, string name)
+        {
+            path = Path.Combine(path, name);
+
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            return path;
+        }
+
         public static string GetAddress(string host, int port)
         {
             return host + ":" + port;

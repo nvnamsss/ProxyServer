@@ -12,9 +12,6 @@ namespace ProxyServer.Class
     public class BridgeConnection
     {
         public static int CAPACITY { get; } = 5242880;
-
-        public Proxy Parent { get; set; }
-
         public Thread ProcessThread { get; set; }
         public int Timeout { get; set; }
         public string Name { get; set; }
@@ -65,7 +62,11 @@ namespace ProxyServer.Class
         {
             WebClient.Close();
             SocketClient.Close();
-            Parent.Remove(Name);
+            if (Proxy.Instance == null)
+            {
+                Console.WriteLine("dsaabadzxzxzxzxzxzx");
+            }
+            Proxy.Instance.Remove(Name);
         }
 
         private void ReceivedClientCallback(object sender, ReceivedEventArgs e)
@@ -88,7 +89,7 @@ namespace ProxyServer.Class
                     Close();
                     break;
                 case HttpMethod.GET:
-                    if (Parent.CheckBlackList(httpMessage.GetHost()))
+                    if (Proxy.Instance.CheckBlackList(httpMessage.GetHost()))
                     {
                         Send403();
                         Close();
@@ -96,12 +97,35 @@ namespace ProxyServer.Class
                     }
 
                     Console.WriteLine("[Response] - " + message);
-                    WebClient.Connect(httpMessage.HttpUri);
-                    SendGetRequest(message);
+                    byte[] bytes;
+
+                    
+                    if ((bytes = Proxy.Instance.GetCache(httpMessage.GetHost())) != null)
+                    {
+                        Console.WriteLine("Yes, indeed");
+                        if (bytes.Length > 4096)
+                        {
+                            Console.WriteLine("Hi mom");
+                            ProcessServerMessage(bytes, 0, bytes.Length);
+                        }
+                        else
+                        {
+                            WebClient.Connect(httpMessage.HttpUri);
+                            SendGetRequest(message);
+                        }
+                    }
+                    else
+                    {
+                        WebClient.Connect(httpMessage.HttpUri);
+                        SendGetRequest(message);
+                    }
+
+
+
                     break;
                 case HttpMethod.POST:
                     Console.WriteLine(httpMessage.GetHost());
-                    if (Parent.CheckBlackList(httpMessage.GetHost()))
+                    if (Proxy.Instance.CheckBlackList(httpMessage.GetHost()))
                     {
                         Send403();
                         Close();

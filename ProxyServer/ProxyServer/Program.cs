@@ -63,6 +63,7 @@ namespace ProxyServer
             //}
             //Console.WriteLine(response);
             Console.ReadKey();
+            proxy.Close();
         }
 
        

@@ -20,6 +20,7 @@ namespace ProxyServer.Class
         public IPAddress IPAddress { get; set; }
         public IPEndPoint IPEndPoint { get; set; }
         public List<string> BlackList { get; set; }
+        public List<HttpCache> Caches { get; set; }
         public System.Timers.Timer Timer = new System.Timers.Timer();
 
         private ManualResetEvent Stopping { get; set; }
@@ -38,6 +39,10 @@ namespace ProxyServer.Class
             IPEndPoint = new IPEndPoint(IPAddress, ConstantProperty.PROXY_PORT);
             Connections = new List<BridgeConnection>(100);
             BlackList = new List<string>();
+            Caches = new List<HttpCache>();
+
+            GetCaches();
+            GetBlackList();
             Run();
         }
 
@@ -62,7 +67,6 @@ namespace ProxyServer.Class
                     {
                         Connections.Add(new BridgeConnection(handler));
                         Connections[Connections.Count - 1].Name = Connections.Count.ToString();
-                        Connections[Connections.Count - 1].Parent = this;
                     }
                 }
             }
@@ -72,7 +76,6 @@ namespace ProxyServer.Class
             }
             
         }
-
         public void Connect(string host, int port)
         {
             SocketSender.Connect(host, port);
@@ -94,7 +97,7 @@ namespace ProxyServer.Class
         {
             for (int loop = 0; loop < Connections.Count; loop++)
             {
-                
+
             }
             if (SocketSender.Connected)
             {
@@ -102,10 +105,6 @@ namespace ProxyServer.Class
             }
         }
 
-        private void Cache()
-        {
-
-        }
 
         public bool CheckBlackList(string host)
         {
@@ -119,35 +118,78 @@ namespace ProxyServer.Class
 
             return isBanned;
         }
-
-        private void GetBlackList()
+        
+        public byte[] GetCache(string host)
         {
-            BlackList.Clear();
-
-            FileStream stream = File.OpenRead(BlacklistPath);
-
-            using (var streamReader = new StreamReader(stream, Encoding.UTF8))
+            for (int loop = 0; loop < Caches.Count; loop++)
             {
-                string line;
-                while ((line = streamReader.ReadLine()) != null)
+                Console.WriteLine("Chaces: " + Caches[loop].Host);
+                if (Caches[loop].Host.Equals(host))
                 {
-                    if (line.Substring(0, 2).Equals("//") || line == string.Empty)
-                    {
-                        continue;
-                    }
-
-                    BlackList.Add(line);
+                    Console.WriteLine(Caches[loop].Content.Length);
+                    return Caches[loop].Content;
                 }
             }
 
-            stream.Close();
+            Console.WriteLine("Host; " + host);
+            return null;
+        }
+
+        public bool IsAlreadyCache(string host)
+        {
+            for (int loop = 0; loop < Caches.Count; loop++)
+            {
+                if (Caches[loop].Host.Equals(host))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void GetCaches()
+        {
+            Caches = HttpCache.CacheFromDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cache"));
+            Console.WriteLine("Lengh:" + Caches.Count);
+        }
+        private void GetBlackList()
+        {
+            BlackList.Clear();
+            BlacklistPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Blacklist.conf");
+
+            if (File.Exists(BlacklistPath))
+            {
+                FileStream stream = File.OpenRead(BlacklistPath);
+
+                using (var streamReader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    string line;
+                    while ((line = streamReader.ReadLine()) != null)
+                    {
+                        if (line.Substring(0, 2).Equals("//") || line == string.Empty)
+                        {
+                            continue;
+                        }
+
+                        BlackList.Add(line);
+                    }
+                }
+
+                stream.Close();
+            }
+            else
+            {
+                File.Create(BlacklistPath);
+            }
         }
 
         public void Close()
         {
-            SocketListener.Close();
-            SocketSender.Close();
-
+            for (int loop = Connections.Count - 1; Connections.Count > 0; loop--)
+            {
+                Connections[loop].Close();
+            }
         }
 
         public async void Run()
