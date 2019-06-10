@@ -15,7 +15,6 @@ namespace ProxyServer.Class
         public static Proxy Instance { get; set; }
         private string BlacklistPath { get; set; }
         public Socket SocketListener { get; set; }
-        public Socket SocketSender { get; set;}
         public List<BridgeConnection> Connections { get; set; }
         public IPAddress IPAddress { get; set; }
         public IPEndPoint IPEndPoint { get; set; }
@@ -34,16 +33,17 @@ namespace ProxyServer.Class
             //IPEndPoint = new IPEndPoint(IPAddress, ConstantProperty.PROXY_PORT);
            
             SocketListener = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            SocketSender = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
             IPAddress = IPAddress.Parse("127.0.0.1");
             IPEndPoint = new IPEndPoint(IPAddress, ConstantProperty.PROXY_PORT);
+
             Connections = new List<BridgeConnection>(100);
+
             BlackList = new List<string>();
             Caches = new List<HttpCache>();
 
             GetCaches();
             GetBlackList();
-            Run();
         }
 
         public void StartListen()
@@ -76,11 +76,6 @@ namespace ProxyServer.Class
             }
             
         }
-        public void Connect(string host, int port)
-        {
-            SocketSender.Connect(host, port);
-            Console.Write(SocketSender.Connected);
-        }
 
         public void Remove(string name)
         {
@@ -92,19 +87,6 @@ namespace ProxyServer.Class
                 }
             }
         }
-
-        public void DisconnectAll()
-        {
-            for (int loop = 0; loop < Connections.Count; loop++)
-            {
-
-            }
-            if (SocketSender.Connected)
-            {
-                SocketSender.Disconnect(true);
-            }
-        }
-
 
         public bool CheckBlackList(string host)
         {
@@ -202,20 +184,6 @@ namespace ProxyServer.Class
             {
                 Connections[loop].Close();
             }
-        }
-
-        public async void Run()
-        {
-            //while (true)
-            //{
-            //    foreach (BridgeConnection connection in Connections)
-            //    {
-            //        connection.ReceiveClient();
-            //        connection.ReceiveServer();
-            //    }
-            //    await Utils.Delay(100);
-            //}
-            
         }
     }
 

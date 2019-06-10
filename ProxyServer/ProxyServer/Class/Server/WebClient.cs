@@ -61,15 +61,15 @@ namespace ProxyServer.Class
             Address = uri;
         }
 
-        public void Read()
+        public void Receive()
         {
             StateObject state = new StateObject();
             state.workSocket = Socket;
             SocketError error;
-            state.workSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, out error, new AsyncCallback(ReadCallback), state);
+            state.workSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, out error, new AsyncCallback(ReceiveCallback), state);
         }
 
-        public void ReadCallback(IAsyncResult ar)
+        public void ReceiveCallback(IAsyncResult ar)
         {
             string content = string.Empty;
             StateObject state = (StateObject)ar.AsyncState;
@@ -107,7 +107,7 @@ namespace ProxyServer.Class
             {
                 if (bytesRead == handler.ReceiveBufferSize)
                 {
-                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReadCallback), state);
+                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
                 }
             }
             catch (ObjectDisposedException ode)
@@ -142,10 +142,10 @@ namespace ProxyServer.Class
                 int bytesSent = handler.EndSend(ar);
                 Console.WriteLine("Sent {0} bytes to WebServer.", bytesSent);
 
-                Read();
+                Receive();
                 Task.Factory.StartNew(() =>
                 {
-                    Read();
+                    Receive();
                 });
                 SendDone.Set();
 

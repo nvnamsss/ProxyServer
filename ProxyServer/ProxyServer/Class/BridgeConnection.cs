@@ -19,8 +19,6 @@ namespace ProxyServer.Class
         public Client SocketClient { get; set; }
         public SWebClient WebClient { get; set; }
 
-        public bool Side { get; set; } = true;
-
         public BridgeConnection()
         {
             SocketClient = new Client(this);
@@ -44,17 +42,7 @@ namespace ProxyServer.Class
 
         public void Process()
         {
-            byte[] bytes = new byte[CAPACITY];
-
-            if (Side)
-            {
-                SocketClient.Receive();
-            }
-            else
-            {
-                Console.WriteLine("Receive server");
-                WebClient.Read();
-            }
+            SocketClient.Receive();
         }
 
         
